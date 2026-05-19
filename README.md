@@ -24,9 +24,9 @@ When you go to a local market, you have no idea if the vendor is charging a fair
 
 ## What it does
 
-**Users** can search for products by name, filter by distance (2–20km), view 7-day price trends, set price drop alerts, save favourites, and report vendors with inflated prices.
+**Users** can search for products by name, filter by distance (2–20km), view 7-day price trends, set price drop alerts, save favourites, report vendors with inflated prices, change their password, and view their report history.
 
-**Vendors** get a dashboard to manage their products and see market price intelligence — average, lowest, and highest price for any product they're about to list. If their price is 50%+ above market average, they get a real-time warning.
+**Vendors** get a dashboard to manage their products and see market price intelligence — average, lowest, and highest price for any product they're about to list. If their price is 50%+ above market average, they get a real-time warning. Vendors can also see which of their products were reported and why.
 
 **Admins** can manage users and vendors, verify shops, override prices, and review flagged vendors.
 
@@ -45,6 +45,29 @@ Auto-ban was intentionally avoided — a coordinated false reporting attack coul
 
 ---
 
+## Security
+
+- Passwords hashed with Bcrypt (salt rounds: 10)
+- JWT authentication with 7-day expiry
+- Input sanitization on all user-facing fields (XSS protection)
+- Role-based route protection — user, vendor, admin
+- `.env` file excluded from version control
+
+---
+
+## Tech Stack
+
+- **Frontend** — React + Vite + Tailwind CSS
+- **Backend** — Node.js + Express
+- **Database** — MongoDB + Mongoose
+- **Auth** — JWT + Bcrypt
+- **Real-time** — Socket.io (price drop alerts)
+- **Images** — Cloudinary + Multer
+- **Charts** — Recharts
+- **Location** — Browser Geolocation + OpenStreetMap Nominatim
+
+---
+
 ## Why NearPrice?
 
 Most price comparison apps work only for e-commerce — Amazon, Flipkart, Meesho. They don't help when you're standing in a local market wondering if the onion vendor is overcharging you.
@@ -57,17 +80,6 @@ NearPrice is built for that exact moment:
 - It shows price trends so users know whether to buy now or wait
 
 The target users are everyday buyers in Tier 2 and Tier 3 cities where local markets still dominate retail — and where price transparency is nearly zero.
-
-## Tech Stack
-
-- **Frontend** — React + Vite + Tailwind CSS
-- **Backend** — Node.js + Express
-- **Database** — MongoDB + Mongoose
-- **Auth** — JWT + Bcrypt
-- **Real-time** — Socket.io (price drop alerts)
-- **Images** — Cloudinary + Multer
-- **Charts** — Recharts
-- **Location** — Browser Geolocation + OpenStreetMap Nominatim
 
 ---
 
@@ -129,6 +141,22 @@ NearPrice/
         ├── pages/      # All pages
         └── utils/      # Axios instance
 ```
+
+---
+
+## Key Design Decisions
+
+**Why vendor-level report aggregation?**
+A vendor selling multiple overpriced products should be flagged as a whole, not just one product.
+
+**Why no auto-ban?**
+A coordinated false reporting attack could unfairly ban legitimate vendors. Human admin review prevents this.
+
+**Why GPS-based shop location?**
+Manual address entry is unreliable. GPS coordinates ensure accurate distance calculations.
+
+**Why market price insight for vendors?**
+Vendors in small markets often don't know competitor pricing. Showing avg/min/max helps them price fairly.
 
 ---
 
