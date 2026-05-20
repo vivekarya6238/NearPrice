@@ -24,7 +24,7 @@ When you go to a local market, you have no idea if the vendor is charging a fair
 
 ## What it does
 
-**Users** can search for products by name, filter by distance (2–20km), view 7-day price trends, set price drop alerts, save favourites, report vendors with inflated prices, change their password, and view their report history.
+**Users** can search for products by name, filter by distance (2–20km), view 7-day price trends, set price drop alerts, save favourites, report vendors with inflated prices, change their password, view their report history, and browse paginated product listings with "Load More".
 
 **Vendors** get a dashboard to manage their products and see market price intelligence — average, lowest, and highest price for any product they're about to list. If their price is 50%+ above market average, they get a real-time warning. Vendors can also see which of their products were reported and why.
 

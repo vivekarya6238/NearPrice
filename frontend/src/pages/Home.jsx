@@ -51,15 +51,20 @@ const Home = () => {
     const [trendingProducts, setTrendingProducts] = useState([]);
     const [suggestions, setSuggestions] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [searched, setSearched] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [userLocation, setUserLocation] = useState(null);
     const [selectedDistance, setSelectedDistance] = useState(null);
     const [locationStatus, setLocationStatus] = useState("pending");
+    const [latestPage, setLatestPage] = useState(1);
+    const [latestHasMore, setLatestHasMore] = useState(false);
+    const [searchPage, setSearchPage] = useState(1);
+    const [searchHasMore, setSearchHasMore] = useState(false);
     const suggestRef = useRef(null);
 
     useEffect(() => {
-        api.get("/product/latest").then((res) => setLatestProducts(res.data));
+        fetchLatest(1);
         api.get("/product/trending").then((res) => setTrendingProducts(res.data));
 
         if (navigator.geolocation) {
@@ -83,6 +88,25 @@ const Home = () => {
         return () => document.removeEventListener("mousedown", handleClick);
     }, []);
 
+    const fetchLatest = async (page) => {
+        try {
+            const res = await api.get(`/product/latest?page=${page}`);
+            if (page === 1) {
+                setLatestProducts(res.data.products);
+            } else {
+                setLatestProducts((prev) => [...prev, ...res.data.products]);
+            }
+            setLatestHasMore(res.data.hasMore);
+            setLatestPage(page);
+        } catch {}
+    };
+
+    const loadMoreLatest = async () => {
+        setLoadingMore(true);
+        await fetchLatest(latestPage + 1);
+        setLoadingMore(false);
+    };
+
     const getDistance = (coordinates) => {
         if (!userLocation || !coordinates) return null;
         const [lng2, lat2] = coordinates;
@@ -98,34 +122,33 @@ const Home = () => {
     };
 
     const handleQueryChange = async (e) => {
-    const val = e.target.value;
-    setQuery(val);
+        const val = e.target.value;
+        setQuery(val);
 
-    // search clear hone pe home view wapas
-    if (val.length === 0) {
-        setSearched(false);
-        setProducts([]);
-        setSuggestions([]);
-        setShowSuggestions(false);
-        return;
-    }
-
-    if (val.length >= 2) {
-        try {
-            const res = await api.get(`/product/suggestions?query=${val}`);
-            setSuggestions(res.data);
-            setShowSuggestions(true);
-        } catch {
+        if (val.length === 0) {
+            setSearched(false);
+            setProducts([]);
             setSuggestions([]);
+            setShowSuggestions(false);
+            return;
         }
-    } else {
-        setSuggestions([]);
-        setShowSuggestions(false);
-    }
+
+        if (val.length >= 2) {
+            try {
+                const res = await api.get(`/product/suggestions?query=${val}`);
+                setSuggestions(res.data);
+                setShowSuggestions(true);
+            } catch {
+                setSuggestions([]);
+            }
+        } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+        }
     };
 
-    const handleSearch = async (e) => {
-        e.preventDefault();
+    const handleSearch = async (e, page = 1) => {
+        if (e) e.preventDefault();
         if (!query.trim()) return;
         setLoading(true);
         setSearched(true);
@@ -136,16 +159,34 @@ const Home = () => {
                     `/product/nearby?longitude=${userLocation.lng}&latitude=${userLocation.lat}&distance=${selectedDistance}`
                 );
                 const nearbyIds = nearbyRes.data.map((p) => p._id);
-                const searchRes = await api.get(`/product/search?query=${query}`);
-                setProducts(searchRes.data.filter((p) => nearbyIds.includes(p._id)));
+                const searchRes = await api.get(`/product/search?query=${query}&page=${page}`);
+                const filtered = searchRes.data.products.filter((p) => nearbyIds.includes(p._id));
+                if (page === 1) {
+                    setProducts(filtered);
+                } else {
+                    setProducts((prev) => [...prev, ...filtered]);
+                }
+                setSearchHasMore(searchRes.data.hasMore);
             } else {
-                const res = await api.get(`/product/search?query=${query}`);
-                setProducts(res.data);
+                const res = await api.get(`/product/search?query=${query}&page=${page}`);
+                if (page === 1) {
+                    setProducts(res.data.products);
+                } else {
+                    setProducts((prev) => [...prev, ...res.data.products]);
+                }
+                setSearchHasMore(res.data.hasMore);
             }
+            setSearchPage(page);
         } catch (err) {
             console.error("Search failed:", err);
         }
         setLoading(false);
+    };
+
+    const loadMoreSearch = async () => {
+        setLoadingMore(true);
+        await handleSearch(null, searchPage + 1);
+        setLoadingMore(false);
     };
 
     const handleSuggestionClick = (name) => {
@@ -153,8 +194,10 @@ const Home = () => {
         setShowSuggestions(false);
         setSearched(true);
         setLoading(true);
-        api.get(`/product/search?query=${name}`).then((res) => {
-            setProducts(res.data);
+        api.get(`/product/search?query=${name}&page=1`).then((res) => {
+            setProducts(res.data.products);
+            setSearchHasMore(res.data.hasMore);
+            setSearchPage(1);
             setLoading(false);
         });
     };
@@ -169,11 +212,15 @@ const Home = () => {
                         `/product/nearby?longitude=${userLocation.lng}&latitude=${userLocation.lat}&distance=${distance}`
                     );
                     const nearbyIds = nearbyRes.data.map((p) => p._id);
-                    const searchRes = await api.get(`/product/search?query=${query}`);
-                    setProducts(searchRes.data.filter((p) => nearbyIds.includes(p._id)));
+                    const searchRes = await api.get(`/product/search?query=${query}&page=1`);
+                    setProducts(searchRes.data.products.filter((p) => nearbyIds.includes(p._id)));
+                    setSearchHasMore(searchRes.data.hasMore);
+                    setSearchPage(1);
                 } else {
-                    const res = await api.get(`/product/search?query=${query}`);
-                    setProducts(res.data);
+                    const res = await api.get(`/product/search?query=${query}&page=1`);
+                    setProducts(res.data.products);
+                    setSearchHasMore(res.data.hasMore);
+                    setSearchPage(1);
                 }
             } catch (err) {
                 console.error("Filter failed:", err);
@@ -198,17 +245,12 @@ const Home = () => {
             >
                 <div className="relative">
                     {product.image ? (
-                        <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-36 object-cover"
-                        />
+                        <img src={product.image} alt={product.name} className="w-full h-36 object-cover" />
                     ) : (
                         <div className="w-full h-36 bg-gray-50 flex items-center justify-center text-5xl">
                             {categoryIcon(product.category)}
                         </div>
                     )}
-
                     {!product.isAvailable && (
                         <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                             <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full font-medium">
@@ -216,20 +258,17 @@ const Home = () => {
                             </span>
                         </div>
                     )}
-
                     {index === 0 && searched && product.isAvailable && (
                         <span className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
                             🏆 Best Price
                         </span>
                     )}
-
                     {product.vendorId?.verificationBadge && (
                         <span className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
                             ✓ Verified
                         </span>
                     )}
                 </div>
-
                 <div className="p-3">
                     <div className="flex justify-between items-start mb-1">
                         <h3 className="font-semibold text-gray-800 text-sm capitalize">{product.name}</h3>
@@ -251,9 +290,7 @@ const Home = () => {
                             ) : (
                                 <p className="text-gray-300 text-xs">No reviews</p>
                             )}
-                            {dist && (
-                                <p className="text-green-600 text-xs font-medium">📍 {dist} km</p>
-                            )}
+                            {dist && <p className="text-green-600 text-xs font-medium">📍 {dist} km</p>}
                         </div>
                     </div>
                 </div>
@@ -265,7 +302,6 @@ const Home = () => {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Navbar />
 
-            {/* hero */}
             <div className="bg-white border-b border-gray-100">
                 <div className="max-w-3xl mx-auto px-4 py-16 text-center">
                     <p className="text-green-600 text-sm font-medium mb-3">🇮🇳 Made for Bharat</p>
@@ -364,18 +400,28 @@ const Home = () => {
                                     </p>
                                     <p className="text-gray-400 text-xs">Sorted by lowest price</p>
                                 </div>
-                                {/* 4 column grid */}
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-10">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
                                     {products.map((product, index) => (
                                         <ProductCard key={product._id} product={product} index={index} />
                                     ))}
                                 </div>
+                                {searchHasMore && (
+                                    <div className="text-center mb-10">
+                                        <button
+                                            onClick={loadMoreSearch}
+                                            disabled={loadingMore}
+                                            className="bg-white border border-gray-200 text-gray-600 px-8 py-2.5 rounded-xl hover:bg-gray-50 transition text-sm font-medium"
+                                        >
+                                            {loadingMore ? "Loading..." : "Load More"}
+                                        </button>
+                                    </div>
+                                )}
                             </>
                         )}
                     </>
                 )}
 
-                {/* trending — 4 columns */}
+                {/* trending */}
                 {!searched && trendingProducts.length > 0 && (
                     <div className="mb-10">
                         <div className="flex items-center justify-between mb-4">
@@ -390,7 +436,7 @@ const Home = () => {
                     </div>
                 )}
 
-                {/* latest — 4 columns */}
+                {/* latest */}
                 {!searched && latestProducts.length > 0 && (
                     <div>
                         <div className="flex items-center justify-between mb-4">
@@ -402,6 +448,17 @@ const Home = () => {
                                 <ProductCard key={product._id} product={product} index={index} />
                             ))}
                         </div>
+                        {latestHasMore && (
+                            <div className="text-center mt-6">
+                                <button
+                                    onClick={loadMoreLatest}
+                                    disabled={loadingMore}
+                                    className="bg-white border border-gray-200 text-gray-600 px-8 py-2.5 rounded-xl hover:bg-gray-50 transition text-sm font-medium"
+                                >
+                                    {loadingMore ? "Loading..." : "Load More"}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
 

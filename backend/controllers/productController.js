@@ -97,7 +97,10 @@ const updatePrice = async (req, res) => {
 
 const searchProducts = async (req, res) => {
     try {
-        const { query, minPrice, maxPrice, showAll } = req.query;
+        const { query, minPrice, maxPrice, showAll, page: pageParam } = req.query;
+        const page = parseInt(pageParam) || 1;
+        const limit = 10;
+        const skip = (page - 1) * limit;
 
         let filter = showAll === "true" ? {} : { isAvailable: true };
 
@@ -114,12 +117,20 @@ const searchProducts = async (req, res) => {
             if (maxPrice) filter.currentPrice.$lte = parseFloat(maxPrice);
         }
 
+        const total = await Product.countDocuments(filter);
         const products = await Product.find(filter)
             .populate("vendorId", "shopName shopAddress location rating isVerified verificationBadge")
             .populate("reports.userId", "name")
-            .sort({ currentPrice: 1 });
+            .sort({ currentPrice: 1 })
+            .skip(skip)
+            .limit(limit);
 
-        res.status(200).json(products);
+        res.status(200).json({
+            products,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            hasMore: page * limit < total,
+        });
     } catch (err) {
         res.status(500).json({ msg: "Server error", error: err.message });
     }
@@ -157,11 +168,23 @@ const getSearchSuggestions = async (req, res) => {
 
 const getLatestProducts = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const skip = (page - 1) * limit;
+
+        const total = await Product.countDocuments();
         const products = await Product.find()
             .populate("vendorId", "shopName shopAddress rating isVerified verificationBadge")
             .sort({ createdAt: -1 })
-            .limit(20);
-        res.status(200).json(products);
+            .skip(skip)
+            .limit(limit);
+
+        res.status(200).json({
+            products,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            hasMore: page * limit < total,
+        });
     } catch (err) {
         res.status(500).json({ msg: "Server error", error: err.message });
     }
