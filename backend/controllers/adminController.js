@@ -30,28 +30,35 @@ const getAllUsers = async (req, res) => {
 };
 
 // ban user
-const banUser = async (req, res) => {
+const banVendor = async (req, res) => {
     try {
-        const user = await User.findByIdAndUpdate(
-            req.params.id,
-            { isBanned: true },
-            { new: true }
-        ).select("-password");
-        res.status(200).json({ msg: "User banned!", user });
+        const vendor = await Vendor.findById(req.params.id);
+        if (!vendor) return res.status(404).json({ msg: "Vendor not found" });
+        
+        vendor.isActive = false;
+        await vendor.save();
+
+        // vendor ka user account bhi ban karo
+        await User.findByIdAndUpdate(vendor.userId, { isBanned: true });
+
+        res.status(200).json({ msg: "Vendor banned!" });
     } catch (err) {
         res.status(500).json({ msg: "Server error", error: err.message });
     }
 };
-
 // unban user
-const unbanUser = async (req, res) => {
+const unbanVendor = async (req, res) => {
     try {
-        const user = await User.findByIdAndUpdate(
-            req.params.id,
-            { isBanned: false },
-            { new: true }
-        ).select("-password");
-        res.status(200).json({ msg: "User unbanned!", user });
+        const vendor = await Vendor.findById(req.params.id);
+        if (!vendor) return res.status(404).json({ msg: "Vendor not found" });
+
+        vendor.isActive = true;
+        await vendor.save();
+
+        // vendor ka user account bhi unban karo
+        await User.findByIdAndUpdate(vendor.userId, { isBanned: false });
+
+        res.status(200).json({ msg: "Vendor unbanned!" });
     } catch (err) {
         res.status(500).json({ msg: "Server error", error: err.message });
     }
