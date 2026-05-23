@@ -30,35 +30,28 @@ const getAllUsers = async (req, res) => {
 };
 
 // ban user
-const banVendor = async (req, res) => {
+const banUser = async (req, res) => {
     try {
-        const vendor = await Vendor.findById(req.params.id);
-        if (!vendor) return res.status(404).json({ msg: "Vendor not found" });
-        
-        vendor.isActive = false;
-        await vendor.save();
-
-        // vendor ka user account bhi ban karo
-        await User.findByIdAndUpdate(vendor.userId, { isBanned: true });
-
-        res.status(200).json({ msg: "Vendor banned!" });
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { isBanned: true },
+            { new: true }
+        ).select("-password");
+        res.status(200).json({ msg: "User banned!", user });
     } catch (err) {
         res.status(500).json({ msg: "Server error", error: err.message });
     }
 };
+
 // unban user
-const unbanVendor = async (req, res) => {
+const unbanUser = async (req, res) => {
     try {
-        const vendor = await Vendor.findById(req.params.id);
-        if (!vendor) return res.status(404).json({ msg: "Vendor not found" });
-
-        vendor.isActive = true;
-        await vendor.save();
-
-        // vendor ka user account bhi unban karo
-        await User.findByIdAndUpdate(vendor.userId, { isBanned: false });
-
-        res.status(200).json({ msg: "Vendor unbanned!" });
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { isBanned: false },
+            { new: true }
+        ).select("-password");
+        res.status(200).json({ msg: "User unbanned!", user });
     } catch (err) {
         res.status(500).json({ msg: "Server error", error: err.message });
     }
@@ -109,6 +102,7 @@ const banVendor = async (req, res) => {
         if (!vendor) return res.status(404).json({ msg: "Vendor not found" });
         vendor.isActive = false;
         await vendor.save();
+        await User.findByIdAndUpdate(vendor.userId, { isBanned: true });
         res.status(200).json({ msg: "Vendor banned!" });
     } catch (err) {
         res.status(500).json({ msg: "Server error", error: err.message });
@@ -122,6 +116,7 @@ const unbanVendor = async (req, res) => {
         if (!vendor) return res.status(404).json({ msg: "Vendor not found" });
         vendor.isActive = true;
         await vendor.save();
+        await User.findByIdAndUpdate(vendor.userId, { isBanned: false });
         res.status(200).json({ msg: "Vendor unbanned!" });
     } catch (err) {
         res.status(500).json({ msg: "Server error", error: err.message });
