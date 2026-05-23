@@ -324,7 +324,7 @@ const VendorDashboard = () => {
 
                         <input
                             type="text"
-                            placeholder="Tags (comma separated: onion, pyaaz, sabzi)"
+                            placeholder="Tags (comma separated e.g. fresh, organic, daily use)"
                             value={form.tags}
                             onChange={(e) => setForm({ ...form, tags: e.target.value })}
                             className="w-full border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
