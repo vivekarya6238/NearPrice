@@ -127,9 +127,9 @@ const VendorDashboard = () => {
         try {
             const vendorRes = await api.get("/vendor/me");
             const res = await api.get(`/product/search?query=&showAll=true`);
-            const filtered = res.data.filter(
-                (p) => p.vendorId?._id === vendorRes.data._id ||
-                       p.vendorId === vendorRes.data._id
+            const vendorId = vendorRes.data._id;
+            const filtered = res.data.products.filter(
+                (p) => p.vendorId?._id === vendorId || p.vendorId === vendorId
             );
             setProducts(filtered);
         } catch {}
