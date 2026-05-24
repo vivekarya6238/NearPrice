@@ -252,27 +252,30 @@ const Register = () => {
 
                             {/* phone for user */}
                             {form.role === "user" && (
-                                <div>
-                                    <input
-                                        type="tel"
-                                        name="phone"
-                                        placeholder="Phone Number (10 digits)"
-                                        value={form.phone}
-                                        onChange={handlePhoneChange}
-                                        className="w-full border border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"
-                                    />
-                                    {form.phone.length > 0 && form.phone.length < 10 && (
-                                        <p className="text-red-400 text-xs mt-1">
-                                            {10 - form.phone.length} more digit{10 - form.phone.length > 1 ? "s" : ""} needed
-                                        </p>
-                                    )}
-                                    {form.phone.length === 10 && !phoneError && (
-                                        <p className="text-green-500 text-xs mt-1">✓ Valid number</p>
-                                    )}
-                                    {phoneError && (
-                                        <p className="text-red-400 text-xs mt-1">✕ {phoneError}</p>
-                                    )}
-                                </div>
+                            <div>
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    placeholder="Phone Number (10 digits)"
+                                    value={form.phone}
+                                    onChange={handlePhoneChange}
+                                    className={`w-full border border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 text-sm ${
+                                        phoneError ? "focus:ring-red-400 border-red-300" : "focus:ring-green-400"
+                                    }`}
+                                    required
+                                />
+                                {form.phone.length > 0 && form.phone.length < 10 && (
+                                    <p className="text-red-400 text-xs mt-1">
+                                        {10 - form.phone.length} more digit{10 - form.phone.length > 1 ? "s" : ""} needed
+                                    </p>
+                                )}
+                                {form.phone.length === 10 && !phoneError && (
+                                    <p className="text-green-500 text-xs mt-1">✓ Valid number</p>
+                                )}
+                                {phoneError && (
+                                    <p className="text-red-400 text-xs mt-1">✕ {phoneError}</p>
+                                )}
+                            </div>
                             )}
 
                             <div className="grid grid-cols-2 gap-3">
@@ -428,7 +431,8 @@ const Register = () => {
                                     disabled={
                                         loading ||
                                         locationStatus !== "allowed" ||
-                                        form.phone.length !== 10
+                                        form.phone.length !== 10 ||
+                                        !!phoneError
                                     }
                                     className="flex-1 bg-green-500 text-white py-3 rounded-xl hover:bg-green-600 transition font-medium text-sm disabled:opacity-50"
                                 >
