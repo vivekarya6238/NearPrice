@@ -124,12 +124,14 @@ const Register = () => {
 
             if (user.role === "vendor") navigate("/vendor/dashboard");
             else navigate("/dashboard");
-        } catch (err) {
+            } catch (err) {
             const msg = err?.response?.data?.msg;
             if (msg === "Email already registered") {
                 setError("This email is already registered. Please login!");
+            } else if (msg === "Phone number already registered") {
+                setError("This phone number is already registered!");
             } else {
-                setError("Registration failed. Try again!");
+                setError(msg || "Registration failed. Try again!");
             }
         }
         setLoading(false);
