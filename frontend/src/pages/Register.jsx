@@ -4,8 +4,6 @@ import { useNavigate, Link } from "react-router-dom";
 import api from "../utils/api";
 import Navbar from "../components/Navbar";
 
-const [phoneError, setPhoneError] = useState("");
-
 const validatePassword = (pwd) => {
     const checks = {
         length: pwd.length >= 8,
@@ -32,6 +30,8 @@ const Register = () => {
     const [locationStatus, setLocationStatus] = useState("idle");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [phoneError, setPhoneError] = useState("");
+
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
