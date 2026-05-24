@@ -9,6 +9,10 @@ const registerVendor = async (req, res) => {
 
         const { shopName, shopAddress, phone, coordinates } = req.body;
 
+        // check if phone already registered
+        const existingPhone = await Vendor.findOne({ phone });
+        if (existingPhone) return res.status(400).json({ msg: "Phone number already registered" });
+
         const vendor = await Vendor.create({
             userId: req.user.id,
             shopName,
