@@ -4,6 +4,8 @@ import { useNavigate, Link } from "react-router-dom";
 import api from "../utils/api";
 import Navbar from "../components/Navbar";
 
+const [phoneError, setPhoneError] = useState("");
+
 const validatePassword = (pwd) => {
     const checks = {
         length: pwd.length >= 8,
@@ -35,9 +37,24 @@ const Register = () => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handlePhoneChange = (e) => {
-        const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+    const handlePhoneChange = async (e) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 10);
         setForm({ ...form, phone: val });
+
+        if (val.length === 10) {
+            try {
+                const res = await api.get(`/vendor/check-phone?phone=${val}`);
+                if (res.data.exists) {
+                    setPhoneError("This phone number is already registered!");
+                } else {
+                    setPhoneError("");
+                }
+            } catch {
+                setPhoneError("");
+            }
+        } else {
+            setPhoneError("");
+        }
     };
 
     const handleStep1 = (e) => {
@@ -249,8 +266,11 @@ const Register = () => {
                                             {10 - form.phone.length} more digit{10 - form.phone.length > 1 ? "s" : ""} needed
                                         </p>
                                     )}
-                                    {form.phone.length === 10 && (
+                                    {form.phone.length === 10 && !phoneError && (
                                         <p className="text-green-500 text-xs mt-1">✓ Valid number</p>
+                                    )}
+                                    {phoneError && (
+                                        <p className="text-red-400 text-xs mt-1">✕ {phoneError}</p>
                                     )}
                                 </div>
                             )}
