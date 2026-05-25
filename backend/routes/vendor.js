@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const Vendor = require("../models/vendor");
 const {
     registerVendor,
     getMyVendorProfile,
