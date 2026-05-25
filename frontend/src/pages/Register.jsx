@@ -339,7 +339,9 @@ const Register = () => {
                                     placeholder="Phone Number (10 digits)"
                                     value={form.phone}
                                     onChange={handlePhoneChange}
-                                    className="w-full border border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"
+                                    className={`w-full border border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 text-sm ${
+                                        phoneError ? "focus:ring-red-400 border-red-300" : "focus:ring-green-400"
+                                    }`}
                                     required
                                 />
                                 {form.phone.length > 0 && form.phone.length < 10 && (
@@ -347,11 +349,13 @@ const Register = () => {
                                         {10 - form.phone.length} more digit{10 - form.phone.length > 1 ? "s" : ""} needed
                                     </p>
                                 )}
-                                {form.phone.length === 10 && (
+                                {form.phone.length === 10 && !phoneError && (
                                     <p className="text-green-500 text-xs mt-1">✓ Valid number</p>
                                 )}
+                                {phoneError && (
+                                    <p className="text-red-400 text-xs mt-1">✕ {phoneError}</p>
+                                )}
                             </div>
-
                             {/* location — auto fills address */}
                             <div className={`rounded-xl px-4 py-3 border ${
                                 locationStatus === "allowed"
